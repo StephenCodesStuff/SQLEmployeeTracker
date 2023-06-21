@@ -1,6 +1,7 @@
 
 const inquirer = require('inquirer');
 const mysql = require('mysql2');
+
 // const viewAllDepartments() = require(/modules/viewalldpartments.js)
 const db = mysql.createConnection(
     {
@@ -112,21 +113,35 @@ function addADepartment(){
 };
 
 function addARoll(){
+  db.query('SELECT department FROM department;', function(err, departments) {
+    if (err) {
+      console.log(err);
+      return;
+    }
+    console.log(departments)
 
-
-inquirer
-  .prompt({
-  name: 'newDepartment',
-  type: 'input',
-  message: 'What is your new department?',
- })
- .then((response) => {
-  console.log(response.newDepartment)
-  db.query(`INSERT INTO department (department) VALUES ("${response.newDepartment}");`, function (err, results) {
-    console.log(`${response.newDepartment} added to departments`);
-  });
- })
-  start()
+    inquirer
+    .prompt([
+      {
+        type: 'input',
+        name: 'roleName',
+        message: 'Enter the name of the role:',
+      },
+      {
+        type: 'input',
+        name: 'salary',
+        message: 'Enter the salary for the role:',
+      },
+      {
+        type: 'input',
+        name: 'department',
+        message: 'Enter the department for the role:',
+        // choices: departments.map(department => ({
+        //   name: !
+        // })),
+      },
+    ])
+  })
 };
 
 start()
