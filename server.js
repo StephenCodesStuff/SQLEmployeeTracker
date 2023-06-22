@@ -1,4 +1,5 @@
 
+const { response } = require('express');
 const inquirer = require('inquirer');
 const mysql = require('mysql2');
 
@@ -58,6 +59,10 @@ setTimeout(() => {
           addARoll()
         break;
 
+        case 'Add an employee':
+          addAnEmployee()
+        break;
+
     }
 
     // Use user feedback for... whatever!!
@@ -74,7 +79,7 @@ setTimeout(() => {
 }
 
 
-function viewAllDepartments(){
+async function viewAllDepartments(){
   db.query('SELECT department FROM department;', function (err, results) {
     console.table(results);
   });
@@ -82,21 +87,21 @@ function viewAllDepartments(){
  
 }; 
 
-function viewAllRoles(){
-  db.query('SELECT title, salery, department FROM role JOIN department on role. department_id = department.id;', function (err, results) {
+async function viewAllRoles(){
+  db.query('SELECT title, salary, department FROM role JOIN department on role. department_id = department.id;', function (err, results) {
     console.table(results);
   });
   start()
 };
 
-function viewAllEmployees(){
-  db.query('SELECT employee.first_name, employee.last_name, CONCAT(manager.first_name, " ", manager.last_name) AS manager_name, role.title, department.department, role.salery FROM employee LEFT JOIN role ON employee.role_id = role.id LEFT JOIN department ON role.department_id = department.id LEFT JOIN employee AS manager ON employee.manager_id = manager.id;', function (err, results) {
+async function viewAllEmployees(){
+  db.query('SELECT employee.first_name, employee.last_name, CONCAT(manager.first_name, " ", manager.last_name) AS manager_name, role.title, department.department, role.salary FROM employee LEFT JOIN role ON employee.role_id = role.id LEFT JOIN department ON role.department_id = department.id LEFT JOIN employee AS manager ON employee.manager_id = manager.id;', function (err, results) {
     console.table(results);
   });
-  // start()
+  start()
 };
 
-function addADepartment(){
+async function addADepartment(){
   inquirer
   .prompt({
   name: 'newDepartment',
@@ -109,22 +114,27 @@ function addADepartment(){
     console.log(`${response.newDepartment} added to departments`);
   });
  })
+ .then((response) => {
   start()
+ })
 };
 
-function addARoll(){
-  db.query('SELECT department FROM department;', function(err, departments) {
+async function addARoll(){
+  db.query('SELECT * FROM department;', function(err, departments) {
     if (err) {
       console.log(err);
       return;
     }
-    console.log(departments)
-
+  const departmentChoices = departments.map((row) => ({
+    name: row.department,
+    value: row.id,
+  }));
+  
     inquirer
     .prompt([
       {
         type: 'input',
-        name: 'roleName',
+        name: 'title',
         message: 'Enter the name of the role:',
       },
       {
@@ -133,17 +143,122 @@ function addARoll(){
         message: 'Enter the salary for the role:',
       },
       {
-        type: 'input',
+        type: 'list',
         name: 'department',
         message: 'Enter the department for the role:',
-        // choices: departments.map(department => ({
-        //   name: !
-        // })),
+        choices: departmentChoices,
       },
     ])
+    .then((response) => {
+      console.log(response)
+      const roleTitle = response.title;
+      const roleSalary = response.salary;
+      console.log(roleSalary);
+      const departmentId = response.department;
+      db.query( `INSERT INTO role (title, salary, department_id) VALUES ( ?, ?, ?);`, [roleTitle, roleSalary, departmentId],
+      function (err, response) {
+        if (err) {
+          console.error('error adding role'+err);
+        } else {
+          console.log(`Role '${roleTitle} added`)
+        }
+      })
+       
+      // db.query(`INSERT INTO role (title, salary, department_id) VALUES ("${response.roleName}", ${response.salary}, ${response.department});`, function (err, response) {
+      //   console.log(`${response.roleName} added to departments`);
+      // });
+     })
+     .then((response) => {
+      start()
+     })
   })
+
 };
 
+async function addAnEmployee(){
+  db.query('SELECT id, title FROM role;', function(err, role) {
+    if (err) {
+      console.log(err);
+      return;
+    }
+  const roleChoice = role.map((row) => ({
+    name: row.title,
+    value: row.id,
+  }));
+  
+  
+
+    inquirer
+    .prompt([
+      {
+        type: 'input',
+        name: 'first_name',
+        message: 'Enter the employee first name',
+      },
+      {
+        type: 'input',
+        name: 'last_name',
+        message: 'Enter the employee last name',
+      },
+      {
+        type: 'list',
+        name: 'role',
+        message: 'Enter the employee roll',
+        choices: roleChoice,
+      },
+      {
+        type: 'list',
+        name: 'manager_id',
+        message: 'Enter the employee roll',
+        choices: db.query('SELECT * FROM employee;', function(err, results) {
+          if (err) {
+            console.error('error retiving employees' + err);
+            return;
+          }
+          const managerChoice = results.map((row) => ({
+            name: `${row.first_name} ${row.last_name}`,
+          value: row.id,
+          }));
+          managerChoice.unshift({ name: 'None', value: null });
+        })
+      },
+    ])
+    .then((response) => {
+      console.log(response)
+      const firstName = response.first_name;
+      const lastName = response.last_name;
+      const roleChoice= response.role;
+      console.log(firstName, lastName, roleChoice);
+      db.query( `select role (title, salary, department_id) VALUES ( ?, ?, ?);`, [roleTitle, roleSalary, departmentId],
+      function (err, response) {
+        if (err) {
+          console.error('error adding role'+err);
+        } else {
+          console.log(`Role '${roleTitle} added`)
+        }
+      })
+       
+      // db.query(`INSERT INTO role (title, salary, department_id) VALUES ("${response.roleName}", ${response.salary}, ${response.department});`, function (err, response) {
+      //   console.log(`${response.roleName} added to departments`);
+      // });
+     })
+     .then((response) => {
+      start()
+     })
+  })
+
+};
 start()
 
 // CONCAT(manager.first_name, " ", manager.last_name) AS manager FROM employee LEFT JOIN role ON employee.role_id = role.id LEFT JOIN department on role.department_id = department.id LEFT JOIN employee manager on manager.id = employee.manger_id
+
+// db.query('SELECT * from employee;', function(err, employee) {
+//   if (err) {
+//     console.log(err);
+//     return;
+//   }
+//   const managerChoice = results.map((row) => ({
+//     name: `${row.first_name} ${row.last_name}`,
+//     value: row.id,
+//   }));
+//   managerChoice.unshift({name: 'none', value: null});

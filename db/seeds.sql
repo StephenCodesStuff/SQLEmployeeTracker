@@ -4,8 +4,11 @@ VALUES ("Finace"),
        ("Janitorial");
        
 
-INSERT INTO role (title, salery, department_id)
-VALUES ("Accountant", 100000, 1), ("sales person", 50000, 2), ("body remover", 200000, 3);
+INSERT INTO role (title, salary, department_id) 
+VALUES 
+("Accountant", 100000, 1), 
+("sales person", 50000, 2), 
+("body remover", 200000, 3);
 
 
 INSERT INTO employee (first_name, last_name, role_id, manager_id)
