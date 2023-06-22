@@ -221,7 +221,7 @@ db.query('SELECT first_name, last_name, id FROM employee;', function (err, data)
         {
           type: 'list',
           name: 'manager_id',
-          message: 'Enter the employee roll',
+          message: 'Enter their manager',
           choices: managerChoice
         },
       ])
